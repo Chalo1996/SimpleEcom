@@ -27,7 +27,8 @@ config();
 // import Order from "./models/order.js";
 // import OrderItem from "./models/order_items.js";
 
-const uri = "mongodb://localhost:27017/shop";
+// DATABASE URL
+const uri = process.env.MONGO_URI;
 
 const app = express();
 
