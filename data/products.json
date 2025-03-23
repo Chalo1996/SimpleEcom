@@ -1,0 +1,37 @@
+[
+  {
+    "id": "1211cf7f-c48c-4caf-bc05-a39f59cbf6d1",
+    "title": "Laptop",
+    "ImgUrl": "https://images.pexels.com/photos/2047905/pexels-photo-2047905.jpeg?auto=compress&cs=tinysrgb&w=400",
+    "price": "4500",
+    "description": "A Macbook gives you purpose. Robustness and elegance."
+  },
+  {
+    "id": "34c793f0-8a5d-4d54-b2dd-cf2e4c86d94b",
+    "title": "Apple Collection",
+    "ImgUrl": "https://images.pexels.com/photos/306763/pexels-photo-306763.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "price": "7500",
+    "description": "A collection to keep you going."
+  },
+  {
+    "id": "da4edd0c-cc7a-4387-8e8f-c609d56cbf64",
+    "title": "Boquete ",
+    "ImgUrl": "https://images.pexels.com/photos/27746385/pexels-photo-27746385/free-photo-of-black-eyed-susan-flowers-in-the-garden.jpeg?auto=compress&cs=tinysrgb&w=600&lazy=load",
+    "price": "200",
+    "description": "Flowers are a symbol of life."
+  },
+  {
+    "id": "43645867-81cd-4c8a-94cf-aefe0d30d8c4",
+    "title": "Honey",
+    "ImgUrl": "https://images.pexels.com/photos/33260/honey-sweet-syrup-organic.jpg?auto=compress&cs=tinysrgb&w=400",
+    "price": "50",
+    "description": "Honey is a sweet medicine—Clean, Clear, Curesome."
+  },
+  {
+    "id": "fb1c9a11-5eaa-468b-bc74-be5112d38f23",
+    "title": "Google pixel",
+    "ImgUrl": "https://images.pexels.com/photos/15802450/pexels-photo-15802450/free-photo-of-close-up-of-a-person-holding-a-google-pixel-smartphone.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "price": "700",
+    "description": "It is a piece of art—a depiction of human intelligence."
+  }
+]

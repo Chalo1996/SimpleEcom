@@ -1,0 +1,57 @@
+<%- include("../includes/head.ejs") %>
+<link rel="stylesheet" href="/styles/cart.css">
+</head>
+
+<body>
+    <%- include('../includes/navigation.ejs') %>
+    <main>
+        <% if (products.length > 0) { %>
+            <ul class="cart__item-list">
+                <% products.forEach(p => { %>
+                    <% if (p.productId) { %>
+                        <li class="cart__item">
+                            <h1><%= p.productId.title %></h1>
+                            <h2>Quantity: <%= p.quantity %></h2>
+                        </li>
+                    <% } else { %>
+                        <li class="cart__item">
+                            <h1>Product removed</h1>
+                        </li>
+                    <% } %>
+                <% }) %>
+            </ul>
+            <hr>
+            <div class="centered">
+                <h2>
+                    Total: $<%= total.toFixed(2) %>
+                </h2>
+            </div>
+            <div class="centered">
+                <button id="order-btn" class="btn">ORDER</button>
+                <script src="https://js.stripe.com/v3/"></script>
+                <script>
+                    var stripe = Stripe("pk_test_51Q67hzBu0F5ItawdcuxEstuGLYNy2LcKl1PzPH5tJ2w4eel6ZbXVXlyT3sh94qpY2hxg1rjs0xNKMolXdUeoqjzZ00gnqcgEDx")
+                    var orderBtn = document.getElementById("order-btn")
+                    orderBtn.addEventListener('click', function() {
+                        // Disable the button to prevent multiple clicks
+                        orderBtn.disabled = true;
+                        stripe.redirectToCheckout({
+                            sessionId: '<%= sessionId%>'
+                        }).then(function (result) {
+                            if (result.error) {
+                                // Show an error message to your customer
+                                alert(result.error.message);
+                                // Re-enable the button if error occurs
+                                orderBtn.disabled = false;
+                            }
+                        });
+                    });
+
+                </script>
+            </div>
+        <% } else { %>
+            <h1>No products in cart</h1>
+        <% } %>
+    </main>
+    <%- include('../includes/end.ejs') %>
+</body>
