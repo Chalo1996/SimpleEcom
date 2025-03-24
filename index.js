@@ -221,17 +221,12 @@ app.use((error, req, res, next) => {
 
 const connectToDatabase = async () => {
   try {
-    await mongoose.connect(uri, {
-      tls: true,
-      tlsCAFile: path.join(
-        process.cwd(),
-        "node_modules/mongoose/node_modules/mongodb/libcore/assets/mongo-cert.pem"
-      ),
-      serverSelectionTimeoutMS: 5000,
-    });
+    // Connect to your MongoDB database
+    await mongoose.connect(uri, {});
+
     console.log("Connected to MongoDB");
   } catch (err) {
-    console.error("Database connection error:", err);
+    console.error("Error connecting to the database or creating user:", err);
   }
 };
 
