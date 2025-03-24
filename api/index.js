@@ -19,13 +19,13 @@ config();
 
 // These imports were used when working with sequelize
 
-// import sequelize from "./util/database.js";
-// import Product from "./models/db_product.js";
-// import User from "./models/user.js";
-// import Cart from "./models/db_cart.js";
-// import CartItem from "./models/cart_item.js";
-// import Order from "./models/order.js";
-// import OrderItem from "./models/order_items.js";
+// import sequelize from "../util/database.js";
+// import Product from "../models/db_product.js";
+// import User from "../models/user.js";
+// import Cart from "../models/db_cart.js";
+// import CartItem from "../models/cart_item.js";
+// import Order from "../models/order.js";
+// import OrderItem from "../models/order_items.js";
 
 // DATABASE URL
 const uri = process.env.MONGO_URI;
