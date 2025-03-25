@@ -53,7 +53,7 @@ app.use((req, res, next) => {
 // Use req.csrfToken() provided by doubleCsrfProtection middleware
 app.use((req, res, next) => {
   res.locals.isAuthenticated = req.session.isLoggedIn;
-  res.locals.csrfToken = req.csrfToken(req, res);
+  res.locals.csrfToken = req.csrfToken(req, res, false, false);
   // res.locals.user = req.user;
   next();
 });
