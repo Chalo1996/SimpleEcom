@@ -2,18 +2,20 @@
   "name": "express-learn",
   "version": "1.0.0",
   "description": "Learn Express",
-  "main": "parsing_req.js",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon parsing_req.js"
+    "start": "nodemon index.js"
   },
   "author": "Emmanuel Chalo",
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.3",
+    "cloudinary": "^2.6.0",
     "connect-mongodb-session": "^5.0.0",
-    "csurf": "^1.11.0",
+    "cookie-parser": "^1.4.7",
+    "csrf-csrf": "^3.1.0",
     "dotenv": "^16.4.5",
     "ejs": "^3.1.10",
     "express": "^4.19.2",
@@ -22,15 +24,16 @@
     "express-validator": "^7.2.0",
     "mongodb": "^6.9.0",
     "mongoose": "^8.6.3",
-    "multer": "^1.4.5-lts.1",
+    "multer": "^1.4.5-lts.2",
     "mysql2": "^3.11.2",
     "nodemailer": "^6.9.15",
     "nodemon": "^3.1.0",
-    "pdfkit": "^0.15.0",
-    "pug": "^3.0.2",
+    "pdfkit": "^0.16.0",
     "sequelize": "^6.37.3",
-    "serverless-http": "^3.2.0",
     "stripe": "^17.1.0"
   },
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6"
+  }
 }

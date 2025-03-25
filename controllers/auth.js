@@ -1,7 +1,7 @@
+import nodemailer from "nodemailer";
 import bcrypt from "bcryptjs";
 import { validationResult } from "express-validator";
 import User from "../models/mongo_user.js";
-import nodemailer from "nodemailer";
 import { config } from "dotenv";
 import crypto from "crypto";
 
@@ -9,6 +9,7 @@ config();
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
+  secure: true,
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_PASS,
@@ -124,18 +125,25 @@ export function postSignup(req, res, next) {
       return user.save();
     })
     .then(() => {
-      return transporter.sendMail({
-        from: process.env.GMAIL_USER,
-        to: email,
-        subject: "Welcome to Our Service!",
-        text: `Hi ${name},\n\nThank you for signing up! We hope you enjoy our service.\n\nBest Regards,\nThe Team`,
-        html: `<p>Hi ${name},</p><p>Thank you for signing up! We hope you enjoy our service.</p><p>Best Regards,<br>The Team</p>`,
-      });
-    })
-    .then(() => {
+      // Send the email in the background without waiting
+      transporter
+        .sendMail({
+          from: process.env.GMAIL_USER,
+          to: email,
+          subject: "Welcome to Our Service!",
+          text: `Hi ${name},\n\nThank you for signing up! We hope you enjoy our service.\n\nBest Regards,\nThe Team`,
+          html: `<p>Hi ${name},</p><p>Thank you for signing up! We hope you enjoy our service.</p><p>Best Regards,<br>The Team</p>`,
+        })
+        .catch((err) => {
+          // Handle email errors independently
+          console.error("Failed to send welcome email:", err);
+        });
+
+      // Redirect immediately after user is saved
       res.redirect("/login");
     })
     .catch((err) => {
+      // Handle errors from bcrypt or user.save()
       console.error("Error during signup:", err);
       res.render("auth/signup", {
         path: "/signup",
@@ -190,7 +198,7 @@ export function postReset(req, res, next) {
         return user.save();
       })
       .then(() => {
-        const resetUrl = `http://localhost:3000/reset/${token}`;
+        const resetUrl = `https://simple-ecom-ruby.vercel.app//reset/${token}`;
         return transporter.sendMail({
           from: process.env.GMAIL_USER,
           to: email,

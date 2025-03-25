@@ -123,46 +123,47 @@ export function getAddProduct(req, res, next) {
       title: "",
       price: "",
       description: "",
+      imageUrl: "",
     },
     errorMessage: null,
   });
 }
 
-// Add a new product
+// Add a new product using a Cloudinary image URL from the client
 export async function postAddProduct(req, res, next) {
   try {
-    const { title, price, description } = req.body;
-    const image = req.file;
+    const { title, price, description, imageUrl } = req.body;
 
-    if (!image) {
+    // Enhanced validation
+    const validationErrors = [];
+    if (!title) validationErrors.push("Title is required");
+    if (!price || price <= 0) validationErrors.push("Valid price is required");
+    if (!imageUrl?.startsWith("https://res.cloudinary.com")) {
+      validationErrors.push("Valid image URL is required");
+    }
+
+    if (validationErrors.length > 0) {
       return res.status(422).render("admin/edit-product", {
         pageTitle: "Add Product",
         path: "/admin/add-product",
         editing: false,
-        product: {
-          title: title,
-          price: price,
-          description: description,
-        },
-        errorMessage: "Attached file is not an image",
+        product: { title, price, description, imageUrl },
+        errorMessage: validationErrors.join(". "),
       });
     }
 
-    const imageUrl = image.filename; // Store only the filename
-    const { _id } = req.user;
-
     const product = new Product({
-      title: title,
-      price: price,
-      imageUrl, // Save filename in DB
-      description: description,
-      userId: _id,
+      title: title.trim(),
+      price: parseFloat(price).toFixed(2),
+      imageUrl,
+      description: description.trim(),
+      userId: req.user._id,
     });
 
     await product.save();
-    console.log("Product added");
     res.redirect("/admin/products");
   } catch (err) {
+    console.error("Product save error:", err);
     const error = new Error(err);
     error.httpStatusCode = 500;
     return next(error);
@@ -172,7 +173,6 @@ export async function postAddProduct(req, res, next) {
 // Get all products and render them
 export function getProducts(req, res, next) {
   const page = +req.query.page || 1;
-
   let totalItems;
 
   Product.find()
@@ -235,51 +235,45 @@ export async function getEditProduct(req, res, next) {
   }
 }
 
-// Update an existing product
-export function postEditProduct(req, res, next) {
-  const { productId, title, price, description } = req.body;
-  const image = req.file;
+// Update an existing product; if a new imageUrl is provided, delete the old image on Cloudinary
+export async function postEditProduct(req, res, next) {
+  const { productId, title, price, description, imageUrl } = req.body;
+  // With direct Cloudinary uploads, there's no req.file
 
-  // Find the product by ID first to check ownership
-  Product.findById(productId)
-    .then((product) => {
-      if (!product) {
-        console.log("Product not found");
-        return res.status(404).send("Product not found");
-      }
+  try {
+    const product = await Product.findById(productId);
+    if (!product) {
+      console.log("Product not found");
+      return res.status(404).send("Product not found");
+    }
+    if (product.userId.toString() !== req.user._id.toString()) {
+      console.log("Unauthorized attempt to edit product");
+      return res.status(403).send("Unauthorized");
+    }
 
-      // Check if the current user is the owner of the product
-      if (product.userId.toString() !== req.user._id.toString()) {
-        console.log("Unauthorized attempt to edit product");
-        return res.status(403).send("Unauthorized");
-      }
+    // Update product details
+    product.title = title;
+    product.price = price;
+    product.description = description;
 
-      // Update product details
-      product.title = title;
-      product.price = price;
-      product.description = description;
+    // If a new imageUrl is provided, delete the old image and update the URL
+    if (imageUrl) {
+      // Optionally delete the old image from Cloudinary
+      await deleteFile(product.imageUrl);
+      product.imageUrl = imageUrl;
+    }
 
-      // Update the image URL only if a new image was uploaded
-      if (image) {
-        deleteFile(product.imageUrl);
-        // Store only the filename
-        product.imageUrl = image.filename;
-      }
-
-      return product.save();
-    })
-    .then(() => {
-      console.log("Product updated successfully");
-      res.redirect("/admin/products");
-    })
-    .catch((err) => {
-      const error = new Error(err);
-      error.httpStatusCode = 500;
-      return next(error);
-    });
+    await product.save();
+    console.log("Product updated successfully");
+    res.redirect("/admin/products");
+  } catch (err) {
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
+  }
 }
 
-// Delete a product
+// Delete a product via form submission
 export function postDeleteProduct(req, res, next) {
   const { productId } = req.body;
 
@@ -299,10 +293,10 @@ export function postDeleteProduct(req, res, next) {
 
       console.log("Product--->", product);
 
-      // Call the delete file function
+      // Delete the image from Cloudinary using deleteFile
       deleteFile(product.imageUrl);
 
-      // If user is the owner, delete the product
+      // Delete the product from the database
       return Product.deleteOne({ _id: productId });
     })
     .then(() => {
@@ -316,7 +310,7 @@ export function postDeleteProduct(req, res, next) {
     });
 }
 
-// Delete a product
+// Delete a product via AJAX request
 export function deleteProduct(req, res, next) {
   const { productId } = req.params;
 
@@ -336,10 +330,10 @@ export function deleteProduct(req, res, next) {
 
       console.log("Product--->", product);
 
-      // Call the delete file function
+      // Delete the image from Cloudinary
       deleteFile(product.imageUrl);
 
-      // If user is the owner, delete the product
+      // Delete the product from the database
       return Product.deleteOne({ _id: productId });
     })
     .then(() => {

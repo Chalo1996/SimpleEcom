@@ -1,20 +1,31 @@
-import fs from "fs";
-import path from "path";
+import { v2 as cloudinary } from "cloudinary";
 
-const deleteFile = (filePath) => {
-  // Construct the full path
-  const fullPath = path.join("images", filePath);
+const deleteFile = (imageUrl) => {
+  if (!imageUrl) {
+    console.error("No imageUrl provided for deletion");
+    return;
+  }
 
-  console.log("Full path -->", fullPath);
+  // Extract public ID from the Cloudinary URL.
+  // Cloudinary URLs typically look like:
+  // https://res.cloudinary.com/<cloud_name>/image/upload/v<version>/<public_id>.<format>
+  const regex = /\/upload\/(?:v\d+\/)?([^\.]+)\.[a-z]+$/i;
+  const match = imageUrl.match(regex);
 
-  fs.unlink(fullPath, (err) => {
-    if (err) {
-      // Log error instead of throwing
-      console.error("Error deleting file:", err);
-      return;
-    }
-    console.log("File deleted successfully:", fullPath);
-  });
+  if (match && match[1]) {
+    const publicId = match[1];
+    console.log("Deleting Cloudinary image with public id:", publicId);
+
+    cloudinary.uploader.destroy(publicId, (error, result) => {
+      if (error) {
+        console.error("Error deleting image from Cloudinary:", error);
+      } else {
+        console.log("Cloudinary image deletion result:", result);
+      }
+    });
+  } else {
+    console.error("Could not extract public id from URL:", imageUrl);
+  }
 };
 
 export default deleteFile;

@@ -4,10 +4,10 @@
 </head>
 
 <body>
-   <%- include('../includes/navigation.ejs') %>
+    <%- include('../includes/navigation.ejs') %>
 
     <main>
-        <form class="product-form" action="/admin/<% if (editing) { %>edit-product<% } else { %>add-product<% } %>" method="POST" enctype="multipart/form-data">
+        <form class="product-form" action="/admin/<% if (editing) { %>edit-product<% } else { %>add-product<% } %>" method="POST">
             <% if (errorMessage) { %>
                 <div class="error-message">
                     <p><%= errorMessage %></p>
@@ -15,30 +15,104 @@
             <% } %>
             <div class="form-control">
                 <label for="title">Title</label>
-                <input type="text" name="title" id="title" value="<% if (editing) { %><%= product.title %><% } %>">
+                <input type="text" name="title" id="title" value="<%= editing ? product.title : '' %>">
             </div>
-            <!-- <div class="form-control">
-                <label for="imageUrl">Image URL</label>
-                <input type="text" name="imageUrl" id="imageUrl" value="<% if (editing) { %>/images/<%= product.imageUrl %><% } %>">
-            </div> -->
+
+            <!-- Image Upload Section -->
             <div class="form-control">
                 <label for="image">Image</label>
-                <input type="file" name="image" id="image">
+                <input type="file" id="image-upload" accept="image/*">
+                <input type="hidden" name="imageUrl" id="image-url" value="<%= editing ? product.imageUrl : '' %>">
+                
+                <!-- Upload status indicators -->
+                <div id="upload-status" style="margin-top: 8px; display: none;">
+                    <span class="loading-spinner" style="display: none;">⏳ Uploading...</span>
+                    <span class="upload-error" style="color: red; display: none;"></span>
+                </div>
+
+                <!-- Image preview -->
+                <% if (editing) { %>
+                    <img src="<%= product.imageUrl %>" alt="Current product image" class="image-preview" style="max-width: 200px; margin-top: 10px;">
+                <% } else { %>
+                    <img src="" alt="Image preview" class="image-preview" style="max-width: 200px; margin-top: 10px; display: none;">
+                <% } %>
             </div>
+
             <div class="form-control">
                 <label for="price">Price</label>
-                <input type="number" name="price" id="price" step="0.01" value="<% if (editing) { %><%= product.price %><% } %>">
+                <input type="number" name="price" id="price" step="0.01" value="<%= editing ? product.price : '' %>">
             </div>
             <div class="form-control">
                 <label for="description">Description</label>
-                <textarea name="description" id="description" rows="5"><% if (editing) { %><%= product.description %><% } %></textarea>
+                <textarea name="description" id="description" rows="5"><%= editing ? product.description : '' %></textarea>
             </div>
             <% if (editing) { %>
                 <input type="hidden" value="<%= product._id %>" name="productId">
             <% } %>
 
             <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
-            <button class="btn" type="submit"><% if (editing) { %>Update Product<% } else { %>Add Product<% } %></button>
+            <button class="btn" type="submit"><%= editing ? 'Update Product' : 'Add Product' %></button>
         </form>
     </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const imageUpload = document.getElementById('image-upload');
+            const imageUrlField = document.getElementById('image-url');
+            const previewImage = document.querySelector('.image-preview');
+            const uploadStatus = document.getElementById('upload-status');
+            const loadingSpinner = uploadStatus.querySelector('.loading-spinner');
+            const errorDisplay = uploadStatus.querySelector('.upload-error');
+
+            imageUpload.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                // Show loading state
+                uploadStatus.style.display = 'block';
+                loadingSpinner.style.display = 'inline';
+                errorDisplay.style.display = 'none';
+
+                const formData = new FormData();
+                formData.append('image', file);
+
+                try {
+                    const response = await fetch('/admin/upload-image', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'CSRF-Token': document.querySelector('input[name="_csrf"]').value
+                        }
+                    });
+
+                    if (!response.ok) throw new Error('Upload failed');
+
+                    const data = await response.json();
+                    
+                    // Update UI
+                    imageUrlField.value = data.imageUrl;
+                    previewImage.src = data.imageUrl;
+                    previewImage.style.display = 'block';
+                    errorDisplay.textContent = '';
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    errorDisplay.textContent = 'Image upload failed. Please try again.';
+                    errorDisplay.style.display = 'block';
+                    imageUpload.value = ''; // Clear the file input
+                } finally {
+                    loadingSpinner.style.display = 'none';
+                }
+            });
+
+            // Form validation
+            document.querySelector('form').addEventListener('submit', (e) => {
+                if (!imageUrlField.value) {
+                    e.preventDefault();
+                    errorDisplay.textContent = 'Please upload an image before submitting.';
+                    errorDisplay.style.display = 'block';
+                }
+            });
+        });
+    </script>
+
 <%- include('../includes/end.ejs') %>
