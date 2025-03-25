@@ -2,6 +2,9 @@ import session from "express-session";
 import connectMongoDBSession from "connect-mongodb-session";
 import { doubleCsrf } from "csrf-csrf";
 import crypto from "crypto";
+import { config } from "dotenv";
+
+config();
 
 const MongoDBStore = connectMongoDBSession(session);
 
