@@ -79,11 +79,18 @@ export function postLogin(req, res, next) {
     });
 }
 
-export function postLogout(req, res, next) {
-  req.session.destroy((error) => {
-    if (error) {
-      console.error("Error clearing user session", error);
+export function postLogout(req, res) {
+  // Preserve CSRF secret before destroying session
+  const csrfSecret = req.session.csrfSecret;
+
+  req.session.destroy((err) => {
+    if (err) {
+      console.error("Logout error:", err);
+      return res.status(500).redirect("/");
     }
+
+    // Clear CSRF cookie explicitly
+    res.clearCookie(csrfConfig.cookieName);
     res.redirect("/");
   });
 }
@@ -95,6 +102,7 @@ export function getSignup(req, res, next) {
     errorMessage: null,
     oldInput: { name: "", email: "", password: "", confirmPassword: "" },
     isAuthenticated: false,
+    csrfToken: req.csrfToken(),
   });
 }
 
@@ -110,6 +118,7 @@ export function postSignup(req, res, next) {
       errorMessage: errors.array()[0].msg,
       oldInput,
       isAuthenticated: false,
+      csrfToken: req.csrfToken(),
     });
   }
 
@@ -198,7 +207,7 @@ export function postReset(req, res, next) {
         return user.save();
       })
       .then(() => {
-        const resetUrl = `https://simple-ecom-ruby.vercel.app//reset/${token}`;
+        const resetUrl = `https://simple-ecom-ruby.vercel.app/reset/${token}`;
         return transporter.sendMail({
           from: process.env.GMAIL_USER,
           to: email,

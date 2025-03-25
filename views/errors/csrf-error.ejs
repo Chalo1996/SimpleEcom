@@ -4,14 +4,14 @@
 
 <body>
   <%- include('../includes/navigation.ejs', {
-    isAuthenticated: isAuthenticated,
-    path: path,
-    csrfToken: csrfToken
+    isAuthenticated: false,
+    path: path || '/error',
+    csrfToken: ''
   }) %>
 
   <main class="error-page">
     <div class="error-container">
-      <h1 class="error-title">Oops! Something went wrong.</h1>
+      <h1 class="error-title">Security Error</h1>
       <p class="error-message"><%= errorMessage %></p>
       <a href="/" class="error-home-link">Go back to Home</a>
     </div>

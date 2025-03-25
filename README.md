@@ -60,10 +60,10 @@ This project is a simple e-commerce website that allows users to browse products
    ```json
    MONGO_URI=your_mongodb_connection_string
    COOKIE_SIGN=your_cookie_secret
-   AWS_ACCESS_KEY_ID=your_aws_access_key_id
-   AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
-   AWS_REGION=your_aws_region
-   AWS_BUCKET_NAME=your_aws_bucket_name
+   CLOUDINARY_CLOUD_NAME=your_cloudinary_name
+   CLOUDINARY_API_KEY=your_cloudinary_secret_access_key
+   CLOUDINARY_API_SECRET=your_cloudinary_API_Secret
+   NODE_ENV=your_node_environment
    STRIPE_SECRET_KEY=your_stripe_secret_key
    STRIPE_PUBLIC_KEY=your_stripe_public_key
    ```
@@ -72,10 +72,10 @@ This project is a simple e-commerce website that allows users to browse products
 
 - `MONGO_URI`: MongoDB connection string.
 - `COOKIE_SIGN`: Secret key for signing session cookies.
-- `AWS_ACCESS_KEY_ID`: AWS credentials for S3.
-- `AWS_SECRET_ACCESS_KEY`: AWS credentials for S3.
-- `AWS_REGION`: AWS region for S3 bucket.
-- `AWS_BUCKET_NAME`: Name of your AWS S3 bucket.
+- `CLOUDINARY_CLOUD_NAME`: Cloudinary name.
+- `CLOUDINARY_API_KEY`: Cloudinary key.
+- `CLOUDINARY_API_SECRET`: The Cloudinary API Key.
+- `NODE_ENV`: Environment under which the app is run e.g `Production`.
 - `STRIPE_SECRET_KEY`: Your Stripe secret key.
 - `STRIPE_PUBLIC_KEY`: Your Stripe public key.
 
@@ -130,10 +130,10 @@ This project can be deployed on various platforms like Vercel, Heroku, or a trad
     ```bash
     heroku config:set MONGO_URI=your_mongodb_connection_string
     heroku config:set COOKIE_SIGN=your_cookie_secret
-    heroku config:set AWS_ACCESS_KEY_ID=your_aws_access_key_id
-    heroku config:set AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
-    heroku config:set AWS_REGION=your_aws_region
-    heroku config:set AWS_BUCKET_NAME=your_aws_bucket_name
+    heroku config:set CLOUDINARY_CLOUD_NAME=Cloudinary name.
+    heroku config:set CLOUDINARY_API_KEY=Cloudinary key.
+    heroku config:set CLOUDINARY_API_SECRET=The Cloudinary API Key.
+    heroku config:set NODE_ENV=Environment under which the app is run e.g `Production`.
     heroku config:set STRIPE_SECRET_KEY=your_stripe_secret_key
     heroku config:set STRIPE_PUBLIC_KEY=your_stripe_public_key
     ```
@@ -148,7 +148,7 @@ This project can be deployed on various platforms like Vercel, Heroku, or a trad
 
 ### File Uploads:
 
-Files uploaded via forms (e.g., product images) are handled by Multer and stored temporarily in memory (using Multer's memory storage). They are then uploaded to AWS S3, and the returned URL is used to display the image on the site.
+Files uploaded via forms (e.g., product images) are handled by Multer and stored temporarily in memory (using Multer's memory storage). They are then uploaded to Cloudinary, and the returned URL is used to display the image on the site.
 
 ### Stripe Integration:
 
@@ -156,7 +156,7 @@ The checkout process integrates with Stripe to handle payments securely. Update 
 
 ### Session and CSRF Protection:
 
-User sessions are managed securely with express-session and further protected with csurf to mitigate CSRF attacks.
+User sessions are managed securely with express-session and further protected with csrf-csrf to mitigate CSRF attacks.
 
 ## License
 

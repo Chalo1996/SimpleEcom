@@ -12,50 +12,55 @@ export const configureSession = (uri) => {
   const store = new MongoDBStore({
     uri: uri,
     collection: "sessions",
+    ttl: 7 * 24 * 60 * 60, // 7 days
   });
 
-  store.on("error", (error) => {
-    console.error("Session store error:", error);
-  });
-
-  return session({
-    secret: process.env.COOKIE_SIGN,
-    saveUninitialized: true,
-    resave: false,
-    store: store,
-    cookie: {
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-    },
+  return new Promise((resolve, reject) => {
+    store.once("connected", () => {
+      resolve(
+        session({
+          secret: process.env.COOKIE_SIGN,
+          saveUninitialized: false,
+          resave: false,
+          proxy: true,
+          rolling: true,
+          store: store,
+          cookie: {
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+          },
+        })
+      );
+    });
+    store.on("error", reject);
   });
 };
 
-const { generateToken, doubleCsrfProtection } = doubleCsrf({
+const csrfConfig = {
   getSecret: (req) => {
     if (!req.session.csrfSecret) {
       req.session.csrfSecret = crypto.randomBytes(64).toString("hex");
     }
     return req.session.csrfSecret;
   },
-  cookieName: "_csrf",
+  cookieName:
+    process.env.NODE_ENV === "production"
+      ? "__Host-psifi.x-csrf-token"
+      : "dev-csrf-token",
   cookieOptions: {
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     httpOnly: true,
+    path: "/",
   },
   size: 64,
+  getSessionIdentifier: (req) => req.sessionID,
   ignoredMethods: ["GET", "HEAD", "OPTIONS"],
-  // Ensure the token is read from the body if available
-  getTokenFromRequest: (req) => {
-    const csrfTokenFromCookie = req.cookies["_csrf"];
-    if (csrfTokenFromCookie) {
-      // Split the token and return only the first part
-      return csrfTokenFromCookie.split("|")[0];
-    }
-    return req.body._csrf || req.headers["x-csrf-token"];
-  },
-});
+  getTokenFromRequest: (req) => req.body._csrf,
+};
+
+const { generateToken, doubleCsrfProtection } = doubleCsrf(csrfConfig);
 
 export { doubleCsrfProtection, generateToken };

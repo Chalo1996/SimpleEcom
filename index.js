@@ -1,5 +1,7 @@
 import express from "express";
 import path from "path";
+import helmet from "helmet";
+import hpp from "hpp";
 import adminRoutes from "./routes/admin.js";
 import shopRoutes from "./routes/shop.js";
 import authRoutes from "./routes/auth.js";
@@ -14,6 +16,7 @@ import { Auth } from "./middleware/isAuth.js";
 import { config } from "dotenv";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
+import compression from "compression";
 
 config();
 
@@ -21,70 +24,124 @@ const uri = process.env.MONGO_URI;
 const app = express();
 const viewPath = [process.cwd(), "views"];
 
-// Configure view engine
+// Security Configuration
+app.set("trust proxy", 1);
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        imgSrc: ["'self'", "data:", "https://res.cloudinary.com"],
+        connectSrc: ["'self'"],
+        objectSrc: ["'none'"],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+  })
+);
+app.use(hpp());
+app.use(compression());
+
+// Application Setup
 app.set("view engine", "ejs");
 app.set("views", path.join(...viewPath));
-
-// Middleware
-app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(process.cwd(), "public")));
+app.use(bodyParser.urlencoded({ extended: true, limit: "10kb" }));
 
-// Session configuration
-app.use(configureSession(uri));
+// Async session initialization
+let sessionMiddleware;
+configureSession(uri)
+  .then((session) => {
+    sessionMiddleware = session;
+    app.use(sessionMiddleware);
+    app.use(cookieParser());
+    app.use(doubleCsrfProtection);
 
-// Register cookie-parser (after session if using express-session)
-app.use(cookieParser());
-
-// CSRF Protection (applied globally)
-app.use(doubleCsrfProtection);
-
-// Attach user to request object
-app.use((req, res, next) => {
-  if (!req.session.user) return next();
-  User.findOne({ email: req.session.user.email })
-    .then((user) => {
-      req.user = user || null;
+    // Context middleware
+    app.use((req, res, next) => {
+      res.locals.isAuthenticated = req.session.isLoggedIn || false;
+      res.locals.csrfToken = req.csrfToken();
+      res.locals.path = req.path;
       next();
-    })
-    .catch(next);
-});
+    });
 
-// Set local variables (CSRF token available to views)
-// Use req.csrfToken() provided by doubleCsrfProtection middleware
-app.use((req, res, next) => {
-  res.locals.isAuthenticated = req.session.isLoggedIn;
-  res.locals.csrfToken = req.csrfToken(req, res, false, false);
-  // res.locals.user = req.user;
-  next();
-});
+    // User authentication
+    app.use((req, res, next) => {
+      if (!req.session.user) return next();
+      User.findOne({ email: req.session.user.email })
+        .then((user) => {
+          req.user = user || null;
+          next();
+        })
+        .catch(next);
+    });
 
-// Routes
-app.use("/admin", Auth, adminRoutes);
-app.use(shopRoutes);
-app.use(authRoutes);
+    // Routes
+    app.use("/admin", Auth, adminRoutes);
+    app.use(shopRoutes);
+    app.use(authRoutes);
 
-// Error handling
-app.use(getErrorPage);
-app.use((error, req, res, next) => {
-  console.log(`ERROR: ${error}`);
-  res.status(500).render("errors/error-page", {
-    pageTitle: "Error",
-    path: "/error-page",
-    errorMessage: error.message || "Something went wrong!",
+    // Error handlers
+    app.use((err, req, res, next) => {
+      if (err.code === "EBADCSRFTOKEN") {
+        return res.status(403).render("errors/csrf-error", {
+          pageTitle: "Invalid CSRF Token",
+          path: req.path,
+          errorMessage: "Session expired. Please refresh the page.",
+          isAuthenticated: false,
+          csrfToken: "",
+        });
+      }
+      next(err);
+    });
+
+    app.use(getErrorPage);
+    app.use((error, req, res, next) => {
+      console.error(`[${new Date().toISOString()}] ERROR: ${error.stack}`);
+      res.status(500).render("errors/error-page", {
+        pageTitle: "Error",
+        path: "/error-page",
+        errorMessage:
+          process.env.NODE_ENV === "development"
+            ? error.message
+            : "Something went wrong! Please try again later.",
+        isAuthenticated: false,
+        csrfToken: "",
+      });
+    });
+
+    console.log("Middleware initialization complete");
+  })
+  .catch((error) => {
+    console.error("Session initialization failed:", error);
+    process.exit(1);
   });
-});
 
-// Database connection and server start
+// Database & Server
 const connectToDatabase = async () => {
   try {
-    await mongoose.connect(uri);
+    await mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
     console.log("Connected to MongoDB");
-    app.listen(3000, () => console.log("Server listening on port 3000"));
+    app.listen(3000, () => {
+      console.log(
+        `Server running in ${process.env.NODE_ENV || "development"} mode`
+      );
+    });
   } catch (error) {
-    console.error("Connection error:", error);
+    console.error("Database connection failed:", error);
+    process.exit(1);
   }
 };
 
-connectToDatabase();
+// Start server after session initialization
+setTimeout(() => {
+  if (sessionMiddleware) connectToDatabase();
+}, 1000);
 
 export default app;
