@@ -5,15 +5,11 @@
       "src": "api/index.js",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": "**/*"
+        "includeFiles": "**/*",
+        "memory": 1024,
+        "maxDuration": 60
       }
     }
   ],
-  "functions": {
-    "api/*.js": {
-      "memory": 3009,
-      "maxDuration": 30
-    }
-  },
   "rewrites": [{ "source": "/(.*)", "destination": "/api" }]
 }
