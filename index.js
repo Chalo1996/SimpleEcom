@@ -51,11 +51,25 @@ app.set("views", path.join(...viewPath));
 app.use(express.static(path.join(process.cwd(), "public")));
 app.use(bodyParser.urlencoded({ extended: true, limit: "10kb" }));
 
-// Async session initialization
-let sessionMiddleware;
-configureSession(uri)
-  .then((session) => {
-    sessionMiddleware = session;
+// Database Connection First
+mongoose.connection.on("error", (err) => {
+  console.error("MongoDB connection error:", err);
+  process.exit(1);
+});
+
+mongoose.connection.once("open", () => {
+  console.log("Connected to MongoDB");
+  initializeApp();
+});
+
+async function initializeApp() {
+  try {
+    // Session Configuration after DB connection
+    const sessionMiddleware = await configureSession(
+      mongoose.connection.getClient()
+    );
+
+    // Middleware
     app.use(sessionMiddleware);
     app.use(cookieParser());
     app.use(doubleCsrfProtection);
@@ -113,35 +127,33 @@ configureSession(uri)
       });
     });
 
-    console.log("Middleware initialization complete");
-  })
-  .catch((error) => {
-    console.error("Session initialization failed:", error);
-    process.exit(1);
-  });
-
-// Database & Server
-const connectToDatabase = async () => {
-  try {
-    await mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
-    });
-    console.log("Connected to MongoDB");
+    // Start server
     app.listen(3000, () => {
       console.log(
         `Server running in ${process.env.NODE_ENV || "development"} mode`
       );
     });
   } catch (error) {
-    console.error("Database connection failed:", error);
+    console.error("Application initialization failed:", error);
     process.exit(1);
+  }
+}
+
+// Database Connection with retry logic
+const connectWithRetry = async () => {
+  try {
+    await mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 30000,
+      socketTimeoutMS: 45000,
+      retryWrites: true,
+      w: "majority",
+    });
+  } catch (err) {
+    console.error("Failed to connect to MongoDB - retrying in 5 seconds");
+    setTimeout(connectWithRetry, 5000);
   }
 };
 
-// Start server after session initialization
-setTimeout(() => {
-  if (sessionMiddleware) connectToDatabase();
-}, 1000);
+connectWithRetry();
 
 export default app;

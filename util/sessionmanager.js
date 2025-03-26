@@ -8,9 +8,9 @@ config();
 
 const MongoDBStore = connectMongoDBSession(session);
 
-export const configureSession = (uri) => {
+export const configureSession = (client) => {
   const store = new MongoDBStore({
-    uri: uri,
+    client: client,
     collection: "sessions",
     ttl: 7 * 24 * 60 * 60, // 7 days
   });

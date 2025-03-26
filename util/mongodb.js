@@ -1,6 +1,9 @@
 import { MongoClient } from "mongodb";
+import { config } from "dotenv";
 
-const uri = "mongodb://localhost:27017/learnnode";
+config();
+
+const uri = process.env.MONGO_URI;
 let _db; // Will hold the database connection
 
 export const mongoConnect = async () => {
