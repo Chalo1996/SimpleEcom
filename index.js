@@ -22,7 +22,7 @@ config();
 
 // const uri = process.env.MONGO_URI;
 const uri =
-  "mongodb+srv://myshop:Gavreel1@cluster0.jcqss.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0&ssl=true";
+  "mongodb+srv://myshop:Gavreel1@cluster0.jcqss.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 const app = express();
 const viewPath = [process.cwd(), "views"];
 
@@ -144,7 +144,13 @@ async function initializeApp() {
 // Database Connection with retry logic
 const connectWithRetry = async () => {
   try {
-    await mongoose.connect(uri, {});
+    await mongoose.connect(uri, {
+      tls: true,
+      serverSelectionTimeoutMS: 300000,
+      socketTimeoutMS: 450000,
+      retryWrites: true,
+      w: "majority",
+    });
   } catch (err) {
     console.error("Failed to connect to MongoDB - retrying in 5 seconds");
     setTimeout(connectWithRetry, 5000);
