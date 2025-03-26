@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { validationResult } from "express-validator";
 import User from "../models/mongo_user.js";
 import { config } from "dotenv";
+import { csrfConfig } from "../util/sessionmanager.js";
 import crypto from "crypto";
 
 config();
@@ -80,17 +81,25 @@ export function postLogin(req, res, next) {
 }
 
 export function postLogout(req, res) {
-  // Preserve CSRF secret before destroying session
-  const csrfSecret = req.session.csrfSecret;
-
   req.session.destroy((err) => {
     if (err) {
       console.error("Logout error:", err);
       return res.status(500).redirect("/");
     }
 
-    // Clear CSRF cookie explicitly
-    res.clearCookie(csrfConfig.cookieName);
+    // Clear the session cookie (if your session cookie name is "connect.sid")
+    res.clearCookie("connect.sid", { path: "/" });
+
+    // Clear the CSRF cookie explicitly using the same options
+    res.clearCookie(csrfConfig.cookieName, {
+      path: csrfConfig.cookieOptions.path,
+      // If you set a domain when creating the cookie, include it here:
+      // domain: csrfConfig.cookieOptions.domain,
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      sameSite: "lax",
+    });
+
     res.redirect("/");
   });
 }

@@ -63,4 +63,4 @@ const csrfConfig = {
 
 const { generateToken, doubleCsrfProtection } = doubleCsrf(csrfConfig);
 
-export { doubleCsrfProtection, generateToken };
+export { doubleCsrfProtection, generateToken, csrfConfig };
