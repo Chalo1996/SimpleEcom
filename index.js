@@ -20,9 +20,7 @@ import compression from "compression";
 
 config();
 
-// const uri = process.env.MONGO_URI;
-const uri =
-  "mongodb+srv://myshop:Gavreel1@cluster0.jcqss.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+const uri = process.env.MONGO_URI;
 const app = express();
 const viewPath = [process.cwd(), "views"];
 
