@@ -144,8 +144,8 @@ const connectWithRetry = async () => {
   try {
     await mongoose.connect(uri, {
       tls: true,
-      serverSelectionTimeoutMS: 30000,
-      socketTimeoutMS: 45000,
+      serverSelectionTimeoutMS: 80000,
+      socketTimeoutMS: 95000,
       retryWrites: true,
       w: "majority",
     });
