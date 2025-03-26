@@ -143,9 +143,7 @@ async function initializeApp() {
 const connectWithRetry = async () => {
   try {
     await mongoose.connect(uri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      tls: true, // or ssl: true
+      tls: true,
       serverSelectionTimeoutMS: 30000,
       socketTimeoutMS: 45000,
       retryWrites: true,
