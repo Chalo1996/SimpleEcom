@@ -21,7 +21,9 @@ import cookieParser from "cookie-parser";
 import compression from "compression";
 
 const uri = process.env.MONGO_URI;
-console.log(`[DEBUG: ${new Date().toISOString()}] MongoDB URI: ${uri}`);
+NODE_ENV === "development"
+  ? console.log(`[DEBUG: ${new Date().toISOString()}] MongoDB URI: ${uri}`)
+  : null;
 
 const app = express();
 const viewPath = [process.cwd(), "views"];
