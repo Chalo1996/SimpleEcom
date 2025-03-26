@@ -21,7 +21,7 @@ import cookieParser from "cookie-parser";
 import compression from "compression";
 
 const uri = process.env.MONGO_URI;
-NODE_ENV === "development"
+process.env.NODE_ENV === "development"
   ? console.log(`[DEBUG: ${new Date().toISOString()}] MongoDB URI: ${uri}`)
   : null;
 
