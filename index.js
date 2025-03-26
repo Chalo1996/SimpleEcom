@@ -143,11 +143,11 @@ async function initializeApp() {
 const connectWithRetry = async () => {
   try {
     await mongoose.connect(uri, {
-      // tls: true,
-      // serverSelectionTimeoutMS: 80000,
-      // socketTimeoutMS: 95000,
-      // retryWrites: true,
-      // w: "majority",
+      tls: true,
+      serverSelectionTimeoutMS: 300000,
+      socketTimeoutMS: 450000,
+      retryWrites: true,
+      w: "majority",
     });
   } catch (err) {
     console.error("Failed to connect to MongoDB - retrying in 5 seconds");
