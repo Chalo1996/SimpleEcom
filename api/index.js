@@ -5,17 +5,17 @@ import express from "express";
 import path from "path";
 import helmet from "helmet";
 import hpp from "hpp";
-import adminRoutes from "./routes/admin.js";
-import shopRoutes from "./routes/shop.js";
-import authRoutes from "./routes/auth.js";
-import { getErrorPage } from "./controllers/error.js";
-import User from "./models/mongo_user.js";
+import adminRoutes from "../routes/admin.js";
+import shopRoutes from "../routes/shop.js";
+import authRoutes from "../routes/auth.js";
+import { getErrorPage } from "../controllers/error.js";
+import User from "../models/mongo_user.js";
 import mongoose from "mongoose";
 import {
   configureSession,
   doubleCsrfProtection,
-} from "./util/sessionmanager.js";
-import { Auth } from "./middleware/isAuth.js";
+} from "../util/sessionmanager.js";
+import { Auth } from "../middleware/isAuth.js";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import compression from "compression";
