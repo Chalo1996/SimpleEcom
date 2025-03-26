@@ -1,3 +1,6 @@
+import { config } from "dotenv";
+config();
+
 import express from "express";
 import path from "path";
 import helmet from "helmet";
@@ -13,14 +16,13 @@ import {
   doubleCsrfProtection,
 } from "./util/sessionmanager.js";
 import { Auth } from "./middleware/isAuth.js";
-import { config } from "dotenv";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import compression from "compression";
 
-config();
-
 const uri = process.env.MONGO_URI;
+console.log(`[DEBUG: ${new Date().toISOString()}] MongoDB URI: ${uri}`);
+
 const app = express();
 const viewPath = [process.cwd(), "views"];
 
@@ -143,14 +145,11 @@ async function initializeApp() {
 const connectWithRetry = async () => {
   try {
     await mongoose.connect(uri, {
-      tls: true,
-      serverSelectionTimeoutMS: 300000,
-      socketTimeoutMS: 450000,
-      retryWrites: true,
-      w: "majority",
+      serverSelectionTimeoutMS: 60000,
+      socketTimeoutMS: 60000,
     });
   } catch (err) {
-    console.error("Failed to connect to MongoDB - retrying in 5 seconds");
+    console.error("MongoDB connection failed:", err.message);
     setTimeout(connectWithRetry, 5000);
   }
 };
